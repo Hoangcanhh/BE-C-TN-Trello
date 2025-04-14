@@ -1,0 +1,31 @@
+services:
+  app:
+    build:
+      context: ../Trello-CD/be-trello # Đường dẫn đến thư mục backend
+      dockerfile: Dockerfile
+    container_name: trello-app
+    ports:
+      - "8080:8080" # Frontend chạy trên cổng 8080
+      - "3000:3000" # Backend chạy trên cổng 3000
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_DB=${MONGO_DB}
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DB}
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
