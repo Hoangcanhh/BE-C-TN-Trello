@@ -1,31 +1,59 @@
-services:
-  app:
-    build:
-      context: ../Trello-CD/be-trello # Đường dẫn đến thư mục backend
-      dockerfile: Dockerfile
-    container_name: trello-app
-    ports:
-      - "8080:8080" # Frontend chạy trên cổng 8080
-      - "3000:3000" # Backend chạy trên cổng 3000
-    environment:
-      - MONGO_URI=${MONGO_URI}
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
-      - MONGO_DB=${MONGO_DB}
-    depends_on:
-      - mongodb
 
-  mongodb:
-    image: mongo:latest
-    container_name: mongodb
-    ports:
-      - "27017:27017"
+services:
+  postgres:
+    image: postgres:15
+    container_name: trello_postgres
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-      MONGO_INITDB_DATABASE: ${MONGO_DB}
+      POSTGRES_USER: trello
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: trello_db
     volumes:
-      - mongo-data:/data/db
+      - postgres_data:/var/lib/postgresql/data
+      - ./init_trello_db.sql:/docker-entrypoint-initdb.d/init_trello_db.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - trello_network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: trello_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: trello@admin.com
+      PGADMIN_DEFAULT_PASSWORD: 123456
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - trello_network
+
+  backend:
+    build:
+      dockerfile: dockerfile
+    container_name: trello_backend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    networks:
+      - trello_network
+
+  frontend:
+    build:
+      context: C:\\Users\\ICT ADMIN\\Documents\\Trello-CD\\fe-trello-vite
+      dockerfile: dockerfile
+    container_name: trello_frontend
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend
+    networks:
+      - trello_network
 
 volumes:
-  mongo-data:
+  postgres_data:
+
+networks:
+  trello_network:
+    driver: bridge
