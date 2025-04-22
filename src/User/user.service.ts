@@ -19,7 +19,18 @@ export class UserService {
 
   async createUser(user: User): Promise<User | undefined> {
     // Validate the user data here if needed
-
+    const existingEmail = await this.userRepository.findByEmail(user.email);
+    if (existingEmail) {
+      throw new BadRequestException('Email already exists');
+    }
+    const existingUsername = await this.userRepository.findByUsername(
+      user.username,
+    );
+    if (existingUsername) {
+      throw new BadRequestException('Username already exists');
+    }
+    // You can add more validation logic here if needed
+    
     // For example, you can use class-validator to validate the UserDto
 
     return this.userRepository.createUser(user);
