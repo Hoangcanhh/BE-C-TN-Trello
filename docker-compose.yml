@@ -1,4 +1,4 @@
-
+version: '3.8'
 services:
   postgres:
     image: postgres:15
@@ -9,7 +9,6 @@ services:
       POSTGRES_DB: trello_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init_trello_db.sql:/docker-entrypoint-initdb.d/init_trello_db.sql
     ports:
       - "5432:5432"
     networks:
@@ -36,12 +35,16 @@ services:
       - "3000:3000"
     depends_on:
       - postgres
+    environment:
+      - NODE_ENV=production
+      - FRONTEND_URL=http://trello_frontend:80
+      - PORT=3000
     networks:
       - trello_network
 
   frontend:
     build:
-      context: C:\\Users\\ICT ADMIN\\Documents\\Trello-CD\\fe-trello-vite
+      context: ../FE-CDTN-Trello
       dockerfile: dockerfile
     container_name: trello_frontend
     ports:
