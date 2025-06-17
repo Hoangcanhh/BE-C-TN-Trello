@@ -8,6 +8,7 @@ export class UserDto {
   @IsString()
   @IsNotEmpty()
   password: string;
+
 }
 
 export class RegisterUserDto {
@@ -16,25 +17,19 @@ export class RegisterUserDto {
   username: string;
 
   @IsString()
-  @IsNotEmpty()
-  @MinLength(6)
-  password: string;
-
   @IsEmail()
   @IsNotEmpty()
   email: string;
 
   @IsString()
-  status?: number;
+  @IsNotEmpty()
+  @MinLength(6)
+  password: string;
 
   @IsString()
-  avatar?: string;
-
-  @IsString()
-  phone_number?: string;
-
-  @IsString()
-  address?: string;
+  @IsNotEmpty()
+  @MinLength(6)
+  confirmPassword: string;
 }
 
 export class LoginUserDto {

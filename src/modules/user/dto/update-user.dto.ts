@@ -10,11 +10,18 @@ export class UpdateUserDto extends PartialType(UserDto) {
   email?: string;
 
   @IsString()
-  avatar?: string;
+  full_name?: string;
 
+  @IsString()
+  date_of_birth?: string;
+
+  
   @IsString()
   phone_number?: string;
 
   @IsString()
   address?: string;
+
+  @IsString()
+  opcupation?: string;
 }

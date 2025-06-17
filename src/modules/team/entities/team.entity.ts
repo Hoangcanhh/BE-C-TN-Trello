@@ -5,7 +5,7 @@ import { Workspace } from '../../workspace/entities/workspace.entity';
 
 @Entity('team')
 export class Team {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'team_id' })
   id: number;
 
   @Column()
@@ -23,7 +23,7 @@ export class Team {
 
 @Entity('team_member')
 export class TeamMember {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'team_member_id' })
   id: number;
 
   @Column()

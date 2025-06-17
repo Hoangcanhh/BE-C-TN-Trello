@@ -1,53 +1,86 @@
-// trello-backend/src/modules/list/list.service.ts
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { List } from './entities/list.entity';
-import { ListRepository } from './list.repository';
-import { CreateListDto, UpdateListDto } from './dto/create-list.dto';
-import { BoardService } from '../board/board.service';
+import { Injectable, NotFoundException, BadRequestException, Inject,forwardRef } from "@nestjs/common"
+import { ListRepository } from "./list.repository"
+import { BoardService } from "../board/board.service"
+import { CreateListDto } from "./dto/create-list.dto"
+import { UpdateListDto } from "./dto/update-list.dto"
+import { List } from "./entities/list.entity"
 
 @Injectable()
 export class ListService {
   constructor(
-    @InjectRepository(List)
-    private listRepository: ListRepository,
-    private boardService: BoardService,
+    private readonly listRepository: ListRepository,
+    @Inject(forwardRef(() => BoardService))
+    private readonly boardService: BoardService,
   ) {}
 
-  async create(createListDto: CreateListDto): Promise<List> {
-    const { board_id } = createListDto;
+  async create(createListDto: CreateListDto, userId: number): Promise<List> {
+    // Kiểm tra xem bảng có tồn tại và người dùng có quyền truy cập không
+    await this.boardService.findOne(createListDto.boardId, userId)
 
-    // Kiểm tra board
-    const board = await this.boardService.findOne(board_id);
-
-    // Tạo list
-    const list = new List();
-    Object.assign(list, createListDto);
-    list.board = board;
-
-    return this.listRepository.saveList(list);
+    return this.listRepository.create(createListDto)
   }
 
   async findAll(): Promise<List[]> {
-    return this.listRepository.findAll();
+    return this.listRepository.findAll()
   }
 
-  async findOne(id: number): Promise<List> {
-    const list = await this.listRepository.findById(id);
+  async findAllByBoardId(boardId: string, userId: number): Promise<List[]> {
+    // Kiểm tra xem bảng có tồn tại và người dùng có quyền truy cập không
+    await this.boardService.findOne(boardId, userId)
+
+    return this.listRepository.findAllByBoardId(boardId)
+  }
+
+  async findOne(id: string): Promise<List> {
+    const list = await this.listRepository.findOne(id)
     if (!list) {
-      throw new BadRequestException('List not found');
+      throw new NotFoundException(`Không tìm thấy list với ID ${id}`)
     }
-    return list;
+    return list
   }
 
-  async update(id: number, updateListDto: UpdateListDto): Promise<List> {
-    const list = await this.findOne(id);
-    Object.assign(list, updateListDto);
-    return this.listRepository.saveList(list);
+  async update(id: string, updateListDto: UpdateListDto, userId: number): Promise<List> {
+    const list = await this.findOne(id)
+
+    // Kiểm tra xem bảng có tồn tại và người dùng có quyền truy cập không
+    await this.boardService.findOne(list.boardId, userId)
+
+    // Nếu đang cập nhật boardId, kiểm tra xem có hợp lệ không
+    if (updateListDto.boardId && updateListDto.boardId !== list.boardId) {
+      throw new BadRequestException("Không thể thay đổi bảng của list")
+    }
+
+    return this.listRepository.update(id, updateListDto)
   }
 
-  async delete(id: number): Promise<void> {
-    const list = await this.findOne(id);
-    await this.listRepository.deleteList(list);
+  async remove(id: string, userId: number): Promise<void> {
+    const list = await this.findOne(id)
+
+    // Kiểm tra xem bảng có tồn tại và người dùng có quyền truy cập không
+    await this.boardService.findOne(list.boardId, userId)
+
+    await this.listRepository.remove(id)
+  }
+
+  async reorder(boardId: string, listIds: string[], userId: number): Promise<void> {
+    // Kiểm tra xem bảng có tồn tại và người dùng có quyền truy cập không
+    await this.boardService.findOne(boardId, userId)
+
+    // Kiểm tra xem tất cả các list có thuộc về bảng không
+    const lists = await this.listRepository.findAllByBoardId(boardId)
+    const listIdSet = new Set(lists.map((list) => list.id))
+
+    for (const id of listIds) {
+      if (!listIdSet.has(id)) {
+        throw new BadRequestException(`List với ID ${id} không thuộc về bảng ${boardId}`)
+      }
+    }
+
+    // Kiểm tra xem có đủ số lượng list không
+    if (listIds.length !== lists.length) {
+      throw new BadRequestException("Danh sách ID list không khớp với số lượng list trong bảng")
+    }
+
+    await this.listRepository.reorder(boardId, listIds)
   }
 }

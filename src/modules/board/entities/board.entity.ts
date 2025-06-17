@@ -1,28 +1,64 @@
-// trello-backend/src/modules/board/board.entity.ts
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
-import { User } from '../../user/entities/user.entity';
-import { Workspace } from '../../workspace/entities/workspace.entity';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+  ManyToOne,
+  JoinColumn,
+} from "typeorm"
+import { Column as BoardColumn } from "../../column/entities/column.entities"
+import { User } from "../../user/entities/user.entity"
+import { List } from "../../list/entities/list.entity"
 
-@Entity('board')
+@Entity("boards")
 export class Board {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn("uuid")
+  id: string
 
-  @Column()
-  title: string;
+  @Column({ length: 100, nullable: false })
+  title: string
 
-  @Column({ nullable: true })
-  description: string;
+  @Column({ type: "text", nullable: true })
+  description: string
 
-  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
-  owner: User;
+  @Column({ name: "owner_id" })
+  ownerId: number
 
-  @ManyToOne(() => Workspace, { nullable: true, onDelete: 'SET NULL' })
-  workspace: Workspace;
+  @Column({ name: "background_color", length: 50, nullable: true })
+  backgroundColor: string
 
-  @CreateDateColumn()
-  created_at: Date;
+  @Column({ name: "background_image", nullable: true })
+  backgroundImage: string
 
-  @UpdateDateColumn()
-  updated_at: Date;
+  @Column({ default: false })
+  starred: boolean
+
+  @Column({ default: true })
+  active: boolean
+
+  @CreateDateColumn({ name: "created_at" })
+  createdAt: Date
+
+  @UpdateDateColumn({ name: "updated_at" })
+  updatedAt: Date
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: "owner_id" })
+  owner: User
+
+  @OneToMany(
+    () => BoardColumn,
+    (column) => column.board,
+    { cascade: true },
+  )
+  columns: BoardColumn[]
+
+  @OneToMany(
+    () => List,
+    (list) => list.board,
+    { cascade: true },
+  )
+  lists: List[]
 }

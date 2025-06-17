@@ -58,26 +58,23 @@ export class UserService {
   }
 
   async registerUser(registerUser: RegisterUserDto): Promise<User | undefined> {
-    const existingUserByUsername = await this.userRepository.findByUsername(
-      registerUser.username,
-    );
+    const existingUserByUsername = await this.userRepository.findByUsername(registerUser.username);
     if (existingUserByUsername) {
       throw new BadRequestException('Username already exists');
     }
-    const existingUserByEmail = await this.userRepository.findByEmail(
-      registerUser.email,
-    );
+    const existingUserByEmail = await this.userRepository.findByEmail(registerUser.email);
     if (existingUserByEmail) {
       throw new BadRequestException('Email already exists');
     }
-
-    const hashedPassword = await bcrypt.hash(registerUser.password, 10);
-    const user = await this.userRepository.createUser({
+    if (registerUser.password !== registerUser.confirmPassword) {
+      throw new BadRequestException('Passwords do not match');
+    }
+    // const hashedPassword = await bcrypt.hash(registerUser.password, 10);
+    const registerUserDto: RegisterUserDto = {
       ...registerUser,
-      password: hashedPassword,
-    });
-    return this.userRepository.registerUser(user);
-
+      // password: hashedPassword,
+    };
+    return this.userRepository.registerUser(registerUserDto);
   }
 
   async loginUser(loginUser: LoginUserDto): Promise<User | undefined> {
@@ -85,14 +82,12 @@ export class UserService {
     if(!existingEmail) {
       throw new BadRequestException('Email not found')
     }
-    const isPasswordValid = await bcrypt.compare(
-      loginUser.password,
-      existingEmail.password,
-    );
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid password');
-    }
-    return this.userRepository.loginUser(loginUser);
+    const isPasswordValid = loginUser.password === existingEmail.password;
+  if (!isPasswordValid) {
+    throw new UnauthorizedException('Invalid password');
+  }
+    
+    return existingEmail;
   }
 }
 

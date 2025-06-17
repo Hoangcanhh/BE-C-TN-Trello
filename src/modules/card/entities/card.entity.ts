@@ -1,69 +1,61 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
-import { List } from '../../list/entities/list.entity';
-import { User } from '../../user/entities/user.entity';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from "typeorm"
+import { Column as BoardColumn } from "../../column/entities/column.entities"
+import { List } from "../../list/entities/list.entity"
 
-@Entity('card')
+@Entity("cards")
 export class Card {
   @PrimaryGeneratedColumn()
-  id: number;
+  id: number
 
-  @Column()
-  title: string;
+  @Column({ length: 255, nullable: false })
+  title: string
 
-  @Column({ nullable: true })
-  description: string;
+  @Column({ type: "text", nullable: true })
+  description: string
 
-  @ManyToOne(() => List, { onDelete: 'CASCADE' })
-  list: List;
+  @Column({
+    type: "enum",
+    enum: ["blocker", "discussion", "fyi", "paused", "goal"],
+    default: "goal",
+  })
+  type: "blocker" | "discussion" | "fyi" | "paused" | "goal"
 
-  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
-  assigned_to: User;
+  @Column({ default: 0 })
+  count: number
 
-  @Column({ nullable: true })
-  due_date: Date;
+  @Column({ name: "column_id" })
+  columnId: number
 
-  @CreateDateColumn()
-  created_at: Date;
+  @Column({ default: 0 })
+  position: number
 
-  @UpdateDateColumn()
-  updated_at: Date;
-}
+  @CreateDateColumn({ name: "created_at" })
+  createdAt: Date
 
-@Entity('comment')
-export class Comment {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @UpdateDateColumn({ name: "updated_at" })
+  updatedAt: Date
 
-  @Column()
-  content: string;
+  @ManyToOne(
+    () => BoardColumn,
+    (column) => column.cards,
+    { onDelete: "CASCADE" },
+  )
+  @JoinColumn({ name: "column_id" })
+  column: BoardColumn
 
-  @ManyToOne(() => Card, { onDelete: 'CASCADE' })
-  card: Card;
-
-  @ManyToOne(() => User, { onDelete: 'SET NULL' })
-  user: User;
-
-  @CreateDateColumn()
-  created_at: Date;
-
-  @UpdateDateColumn()
-  updated_at: Date;
-}
-
-@Entity('attachment')
-export class Attachment {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column()
-  url: string;
-
-  @ManyToOne(() => Card, { onDelete: 'CASCADE' })
-  card: Card;
-
-  @CreateDateColumn()
-  created_at: Date;
-
-  @UpdateDateColumn()
-  updated_at: Date;
+  @ManyToOne(
+    () => List,
+    (list) => list.cards,
+    { onDelete: "CASCADE" },
+  )
+  @JoinColumn({ name: "list_id" })
+  list: List
 }

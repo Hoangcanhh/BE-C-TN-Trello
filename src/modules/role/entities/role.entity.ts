@@ -2,7 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('roles')
 export class Role {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'role_id' })
   id: number;
 
   @Column({ unique: true })
@@ -14,7 +14,7 @@ export class Role {
 
 @Entity('permissions')
 export class Permission {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'permission_id' })
   id: number;
 
   @Column({ unique: true })
@@ -26,7 +26,7 @@ export class Permission {
 
 @Entity('accesscontrol')
 export class AccessControl {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'accesscontrol_id' })
   id: number;
 
   @Column()

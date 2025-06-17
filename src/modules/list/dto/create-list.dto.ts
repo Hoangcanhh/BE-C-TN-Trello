@@ -1,17 +1,15 @@
-// trello-backend/src/modules/list/list.dto.ts
-import { IsString, IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsNumber } from "class-validator"
 
 export class CreateListDto {
-  @IsString()
-  @IsNotEmpty()
-  title: string;
+  @IsNotEmpty({ message: "Tiêu đề không được để trống" })
+  @IsString({ message: "Tiêu đề phải là chuỗi" })
+  title: string
 
-  @IsNumber()
-  @IsNotEmpty()
-  board_id: number;
-}
+  @IsNotEmpty({ message: "ID bảng không được để trống" })
+  @IsString({ message: "ID bảng phải là chuỗi" })
+  boardId: string
 
-export class UpdateListDto {
-  @IsString()
-  title?: string;
+  @IsOptional()
+  @IsNumber({}, { message: "Vị trí phải là số" })
+  position?: number
 }

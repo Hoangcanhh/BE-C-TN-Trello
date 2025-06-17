@@ -1,54 +1,145 @@
-// trello-backend/src/modules/card/card.repository.ts
-import { Repository } from 'typeorm';
-import { Card } from './entities/card.entity';
-import { Comment } from './entities/card.entity';
-import { Attachment } from './entities/card.entity';
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Injectable } from "@nestjs/common"
+import { Repository } from "typeorm"
+import { Card } from "./entities/card.entity"
+import { CreateCardDto } from "./dto/create-card.dto"
+import { UpdateCardDto } from "./dto/update-card.dto"
+import { MoveCardDto } from "./dto/move-card.dto"
+import { InjectRepository } from "@nestjs/typeorm"
 
 @Injectable()
 export class CardRepository {
   constructor(
     @InjectRepository(Card)
-    private cardRepo: Repository<Card>,
-    @InjectRepository(Comment)
-    private commentRepo: Repository<Comment>,
-    @InjectRepository(Attachment)
-    private attachmentRepo: Repository<Attachment>,
-  ) {}
-
-  // Card
-  async findCardById(id: number): Promise<Card | undefined> {
-    return this.cardRepo.findOne({ where: { id }, relations: ['list', 'assigned_to'] });
+    private cardRepository: Repository<Card>) {
+    this.cardRepository = cardRepository
   }
 
-  async findAllCards(): Promise<Card[]> {
-    return this.cardRepo.find({ relations: ['list', 'assigned_to'] });
+  async create(createCardDto: CreateCardDto): Promise<Card> {
+    // Nếu không có position, lấy vị trí cuối cùng của thẻ trong cột
+    if (createCardDto.position === undefined) {
+      const lastCard = await this.cardRepository.findOne({
+        where: { columnId: createCardDto.columnId },
+        order: { position: "DESC" },
+      })
+      createCardDto.position = lastCard ? lastCard.position + 1 : 0
+    }
+
+    const card = this.cardRepository.create(createCardDto)
+    return this.cardRepository.save(card)
   }
 
-  async saveCard(card: Card): Promise<Card> {
-    return this.cardRepo.save(card);
+  async findAll(): Promise<Card[]> {
+    return this.cardRepository.find({
+      order: { position: "ASC" },
+    })
   }
 
-  async deleteCard(card: Card): Promise<void> {
-    await this.cardRepo.remove(card);
+  async findAllByColumnId(columnId: number): Promise<Card[]> {
+    return this.cardRepository.find({
+      where: { columnId },
+      order: { position: "ASC" },
+    })
   }
 
-  // Comment
-  async findCommentsByCardId(id: number): Promise<Comment[]> {
-    return this.commentRepo.find({ where: { id }, relations: ['user'] });
+  async findOne(id: number): Promise<Card> {
+    return this.cardRepository.findOne({
+      where: { id },
+    })
   }
 
-  async saveComment(comment: Comment): Promise<Comment> {
-    return this.commentRepo.save(comment);
+  async update(id: number, updateCardDto: UpdateCardDto): Promise<Card> {
+    await this.cardRepository.update(id, updateCardDto)
+    return this.findOne(id)
   }
 
-  // Attachment
-  async findAttachmentsByCardId(id: number): Promise<Attachment[]> {
-    return this.attachmentRepo.find({ where: { id } });
+  async remove(id: number): Promise<void> {
+    await this.cardRepository.delete(id)
   }
 
-  async saveAttachment(attachment: Attachment): Promise<Attachment> {
-    return this.attachmentRepo.save(attachment);
+  async move(id: number, moveCardDto: MoveCardDto): Promise<Card> {
+    const queryRunner = this.cardRepository.manager.connection.createQueryRunner()
+    await queryRunner.connect()
+    await queryRunner.startTransaction()
+
+    try {
+      // Lấy thông tin thẻ cần di chuyển
+      const card = await queryRunner.manager.findOne(Card, {
+        where: { id },
+      })
+
+      if (!card) {
+        throw new Error(`Không tìm thấy thẻ với ID ${id}`)
+      }
+
+      const sourceColumnId = card.columnId
+      const { targetColumnId, position } = moveCardDto
+
+      // Nếu di chuyển trong cùng một cột
+      if (sourceColumnId === targetColumnId) {
+        // Cập nhật vị trí của các thẻ khác trong cột
+        if (position < card.position) {
+          // Di chuyển lên trên: tăng vị trí của các thẻ từ vị trí mới đến vị trí cũ
+          await queryRunner.manager
+            .createQueryBuilder()
+            .update(Card)
+            .set({ position: () => "position + 1" })
+            .where("columnId = :columnId AND position >= :newPosition AND position < :oldPosition", {
+              columnId: sourceColumnId,
+              newPosition: position,
+              oldPosition: card.position,
+            })
+            .execute()
+        } else if (position > card.position) {
+          // Di chuyển xuống dưới: giảm vị trí của các thẻ từ vị trí cũ đến vị trí mới
+          await queryRunner.manager
+            .createQueryBuilder()
+            .update(Card)
+            .set({ position: () => "position - 1" })
+            .where("columnId = :columnId AND position > :oldPosition AND position <= :newPosition", {
+              columnId: sourceColumnId,
+              oldPosition: card.position,
+              newPosition: position,
+            })
+            .execute()
+        }
+      } else {
+        // Di chuyển giữa các cột khác nhau
+
+        // 1. Giảm vị trí của các thẻ sau thẻ được di chuyển trong cột nguồn
+        await queryRunner.manager
+          .createQueryBuilder()
+          .update(Card)
+          .set({ position: () => "position - 1" })
+          .where("columnId = :columnId AND position > :position", {
+            columnId: sourceColumnId,
+            position: card.position,
+          })
+          .execute()
+
+        // 2. Tăng vị trí của các thẻ từ vị trí mới trở đi trong cột đích
+        await queryRunner.manager
+          .createQueryBuilder()
+          .update(Card)
+          .set({ position: () => "position + 1" })
+          .where("columnId = :columnId AND position >= :position", {
+            columnId: targetColumnId,
+            position,
+          })
+          .execute()
+      }
+
+      // Cập nhật thẻ được di chuyển
+      card.columnId = targetColumnId
+      card.position = position
+      await queryRunner.manager.save(card)
+
+      await queryRunner.commitTransaction()
+      return card
+    } catch (err) {
+      await queryRunner.rollbackTransaction()
+      throw err
+    } finally {
+      await queryRunner.release()
+    }
   }
 }

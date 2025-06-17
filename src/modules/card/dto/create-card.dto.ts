@@ -1,6 +1,6 @@
-import { IsString, IsNotEmpty, IsNumber, IsDateString } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsDateString, IsOptional, IsEnum } from 'class-validator';
 
-export class CreateCardDto {
+export class CardDto {
   @IsString()
   @IsNotEmpty()
   title: string;
@@ -58,4 +58,32 @@ export class CreateAttachmentDto {
   @IsNumber()
   @IsNotEmpty()
   card_id: number;
+}
+
+export class CreateCardDto {
+  @IsNotEmpty({ message: "Tiêu đề không được để trống" })
+  @IsString({ message: "Tiêu đề phải là chuỗi" })
+  title: string
+
+  @IsOptional()
+  @IsString({ message: "Mô tả phải là chuỗi" })
+  description?: string
+
+  @IsOptional()
+  @IsEnum(["blocker", "discussion", "fyi", "paused", "goal"], {
+    message: "Loại thẻ không hợp lệ",
+  })
+  type?: "blocker" | "discussion" | "fyi" | "paused" | "goal"
+
+  @IsOptional()
+  @IsNumber({}, { message: "Số lượng phải là số" })
+  count?: number
+
+  @IsNotEmpty({ message: "ID cột không được để trống" })
+  @IsNumber({}, { message: "ID cột phải là số" })
+  columnId: number
+
+  @IsOptional()
+  @IsNumber({}, { message: "Vị trí phải là số" })
+  position?: number
 }

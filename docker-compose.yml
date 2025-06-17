@@ -13,6 +13,11 @@ services:
       - "5432:5432"
     networks:
       - trello_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trello"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   pgadmin:
     image: dpage/pgadmin4
@@ -33,12 +38,21 @@ services:
     container_name: trello_backend
     ports:
       - "3000:3000"
-    depends_on:
-      - postgres
+    volumes:
+      - .:/app
+      - /app/node_modules
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - FRONTEND_URL=http://trello_frontend:80
       - PORT=3000
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_USER=trello
+      - DATABASE_PASSWORD=123456
+      - DATABASE_NAME=trello_db
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - trello_network
 
@@ -48,7 +62,7 @@ services:
       dockerfile: dockerfile
     container_name: trello_frontend
     ports:
-      - "3001:80"
+      - "5173:80"
     depends_on:
       - backend
     networks:

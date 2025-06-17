@@ -1,21 +1,48 @@
-// trello-backend/src/modules/list/list.entity.ts
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
-import { Board } from '../../board/entities/board.entity';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+} from "typeorm"
+import { Board } from "../../board/entities/board.entity"
+import { Card } from "../../card/entities/card.entity"
 
-@Entity('list')
+@Entity("lists")
 export class List {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn("uuid")
+  id: string
 
-  @Column()
-  title: string;
+  @Column({ length: 100, nullable: false })
+  title: string
 
-  @ManyToOne(() => Board, { onDelete: 'CASCADE' })
-  board: Board;
+  @Column({ name: "board_id" })
+  boardId: string
 
-  @CreateDateColumn()
-  created_at: Date;
+  @Column({ default: 0 })
+  position: number
 
-  @UpdateDateColumn()
-  updated_at: Date;
+  @CreateDateColumn({ name: "created_at" })
+  createdAt: Date
+
+  @UpdateDateColumn({ name: "updated_at" })
+  updatedAt: Date
+
+  @ManyToOne(
+    () => Board,
+    (board) => board.lists,
+    { onDelete: "CASCADE" },
+  )
+  @JoinColumn({ name: "board_id" })
+  board: Board
+
+  @OneToMany(
+    () => Card,
+    (card) => card.list,
+    { cascade: true },
+  )
+  cards: Card[]
 }

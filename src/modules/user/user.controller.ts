@@ -44,7 +44,13 @@ export class UserController {
     return this.userService.registerUser(user);
   }
   @Post('login')
-  login(@Body() user: UserDto) {
-    return this.userService.loginUser(user);
+  async login(@Body() user: UserDto) {
+    const loggedInUser = await this.userService.loginUser(user);
+    // Chỉ trả về thông tin cần thiết
+    return {
+      id: loggedInUser.id,
+      username: loggedInUser.username,
+      email: loggedInUser.email,
+    };
   }
 }

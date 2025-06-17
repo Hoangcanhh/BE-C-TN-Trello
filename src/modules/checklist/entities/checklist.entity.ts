@@ -3,7 +3,7 @@ import { Card } from '../../card/entities/card.entity';
 
 @Entity('checklist')
 export class Checklist {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'checklist_id' })
   id: number;
 
   @Column()

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { LoginUserDto, RegisterUserDto, UserDto } from './dto/user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateGoogleUserDto } from './dto/create-google.dto';
 
 @Injectable()
 export class UserRepository {
@@ -57,5 +58,25 @@ export class UserRepository {
     return await this.userRepository.findOne({
       where: { email, password },
     });
+  }
+
+  async findByGoogleId(googleId: string): Promise<User | undefined> {
+    return await this.userRepository.findOne({ where: { googleId } });
+  }
+
+  async createGoogleUser(createGoogleUserDto: CreateGoogleUserDto): Promise<User | undefined> {
+    try {
+      const user = this.createGoogleUser({
+        username: createGoogleUserDto.username,
+        email: createGoogleUserDto.email,
+        googleId: createGoogleUserDto.googleId,
+        avatar: createGoogleUserDto.avatar,
+      })
+
+      return await this.userRepository.save(createGoogleUserDto)
+    } catch (error) {
+      console.error("Error creating Google user:", error)
+      return undefined
+    }
   }
 }

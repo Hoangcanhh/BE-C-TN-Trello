@@ -1,5 +1,6 @@
 // trello-backend/src/modules/task/task.dto.ts
 import { IsString, IsNotEmpty, IsNumber, IsDateString } from 'class-validator';
+import { TaskStatusEnum } from '../../../enum/task.enum';
 
 export class CreateTaskDto {
   @IsString()
@@ -19,6 +20,6 @@ export class CreateTaskDto {
   due_date: string;
 
   @IsString()
-  status?: string;
+  status?: TaskStatusEnum;
 }
 

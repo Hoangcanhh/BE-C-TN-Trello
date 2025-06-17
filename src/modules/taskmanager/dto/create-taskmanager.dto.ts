@@ -1,4 +1,5 @@
 import { IsNumber, IsNotEmpty, IsString, IsDateString } from 'class-validator';
+import { TaskStatusEnum } from '../../../enum/task.enum';
 
 export class CreateTaskManagerDto {
   @IsNumber()
@@ -10,7 +11,7 @@ export class CreateTaskManagerDto {
   task_id: number;
 
   @IsString()
-  status?: string;
+  status?: TaskStatusEnum;
 
   @IsDateString()
   reminder_date?: string;

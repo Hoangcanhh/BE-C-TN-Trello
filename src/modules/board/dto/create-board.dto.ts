@@ -1,25 +1,25 @@
-// trello-backend/src/modules/board/board.dto.ts
-import { IsString, IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsBoolean } from "class-validator"
 
 export class CreateBoardDto {
-  @IsString()
-  @IsNotEmpty()
-  title: string;
+  @IsNotEmpty({ message: "Tiêu đề không được để trống" })
+  @IsString({ message: "Tiêu đề phải là chuỗi" })
+  title: string
 
-  @IsString()
-  description?: string;
+  @IsOptional()
+  @IsString({ message: "Mô tả phải là chuỗi" })
+  description?: string
 
-  @IsNumber()
-  owner_id: number;
+  @IsOptional()
+  @IsString({ message: "Màu nền phải là chuỗi" })
+  backgroundColor?: string
 
-  @IsNumber()
-  workspace_id?: number;
-}
+  @IsOptional()
+  @IsString({ message: "Ảnh nền phải là chuỗi" })
+  backgroundImage?: string
 
-export class UpdateBoardDto {
-  @IsString()
-  title?: string;
+  @IsOptional()
+  @IsBoolean({ message: "Đánh dấu sao phải là boolean" })
+  starred?: boolean
 
-  @IsString()
-  description?: string;
+  // ownerId sẽ được lấy từ JWT token
 }

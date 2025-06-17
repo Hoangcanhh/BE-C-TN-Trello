@@ -1,5 +1,5 @@
 // trello-backend/src/modules/workspace/workspace.service.ts
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Workspace } from './entities/workspace.entity';
 import { WorkspaceRepository } from './workspace.repository';
@@ -51,4 +51,15 @@ export class WorkspaceService {
     const workspace = await this.findOne(id);
     await this.workspaceRepository.deleteWorkspace(workspace);
   }
+
+  // async inviteMember(workspaceId: number, email: string) {
+  //   const user = await this.userService.findUserByEmail(email);
+  //   if (!user) throw new NotFoundException('User not found');
+  //   // Kiểm tra đã là thành viên chưa
+  //   const existed = await this.workspaceRepository.findOne({ where: { user: { id: user.id }, workspace: { id: workspaceId } } });
+  //   if (existed) throw new BadRequestException('User already in workspace');
+  //   // Thêm vào workspace
+  //   const member = this.workspaceRepository.create({ user, workspace: { id: workspaceId }, role: 'member' });
+  //   return this.workspaceRepository.save(member);
+  // }
 }

@@ -2,10 +2,11 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import { Card } from '../../card/entities/card.entity';
+import { TaskStatusEnum } from '../../../enum/task.enum';
 
 @Entity('task')
 export class Task {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'task_id' })
   id: number;
 
   @Column()
@@ -21,7 +22,7 @@ export class Task {
   due_date: Date;
 
   @Column({ default: 'pending' })
-  status: string;
+  status: TaskStatusEnum;
 
   @CreateDateColumn()
   created_at: Date;

@@ -5,7 +5,7 @@ import { Card } from '../../card/entities/card.entity';
 
 @Entity('notification')
 export class Notification {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'notification_id' })
   id: number;
 
   @Column()

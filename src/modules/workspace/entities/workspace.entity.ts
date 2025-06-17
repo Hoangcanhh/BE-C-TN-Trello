@@ -4,7 +4,7 @@ import { User } from '../../user/entities/user.entity';
 
 @Entity('workspace')
 export class Workspace {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'workspace_id' })
   id: number;
 
   @Column()

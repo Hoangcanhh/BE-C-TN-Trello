@@ -1,3 +1,4 @@
+import { StatusEnum } from '../../../enum/status.enum';
 import {
   Column,
   CreateDateColumn,
@@ -8,7 +9,7 @@ import {
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'user_id' })
   id: number;
 
   @Column({ unique: true })
@@ -20,11 +21,23 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column({ default: 1 })
-  status: number;
+   @Column({nullable: true})
+  full_name: string;
 
   @Column({ nullable: true })
-  avatar: string;
+  date_of_birth: string;
+
+  @Column({nullable: true })
+  occupation: string;
+
+  @Column({ nullable: true })
+  avatar: string
+
+  @Column({ name: "google_id", nullable: true })
+  googleId: string
+
+  @Column({ name: "is_google_user", default: false })
+  isGoogleUser: boolean
 
   @Column({ nullable: true })
   phone_number: string;
